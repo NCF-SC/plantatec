@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: planta
+    name: tecplanta
     runtime: static
     buildCommand: npm install && npm run build:web
     staticPublishPath: ./webdist

@@ -13,7 +13,7 @@ Sempre que houver alteração funcional ou visual no Plantatec (HTML, CSS, `app.
    - `npm run build:web` (gera `webdist/`)
    - `git add` / `git commit` / `git push` na branch `main`
    - O Render reconstrói e publica automaticamente (Blueprint `render.yaml`)
-4. URL de referência: https://plantatec-y8xu.onrender.com (e custom domain se houver).
+4. URL de referência: https://tecplanta.onrender.com (e custom domain se houver).
 5. Netlify (`plantatec.netlify.app`) ficou como legado; priorize Render enquanto o Netlify estiver com limite de créditos.
 
 Exceção: mudanças só de regras Cursor, notas internas ou build de exe que não alterem o site web.
