@@ -551,7 +551,7 @@ function drawDoyenSeals(planta, frente, sanfona, verso, d) {
  *   C = borda externa, no meio da sanfona (dobra)
  *
  * Solda do fundo: altura = SL, meio a meio na dobra (SL/2 na face + SL/2 na sanfona),
- * pontas em V encaixando nos vértices B do K. Idem no verso.
+ * de lateral a lateral. Idem no verso.
  */
 function drawKSkirtSeals(planta, frente, sanfona, verso, d) {
   const sl = d.solda;
@@ -571,35 +571,12 @@ function drawKSkirtSeals(planta, frente, sanfona, verso, d) {
   const xBL = ox + run;
   const xBR = ox + W - run;
 
-  /** Faixa de solda do fundo centrada na dobra, pontas no vértice B do K */
+  /** Solda do fundo: faixa SL centrada na dobra (SL/2 face + SL/2 sanfona), de lateral a lateral */
   const drawSoldaFundo = (foldY) => {
-    if (run <= 0 || xBR - xBL < halfFundo * 2) {
-      // Largura apertada: retângulo simples meio a meio
-      const y0 = foldY - halfFundo;
-      planta.push(
-        `<rect x="${ox + sl}" y="${y0}" width="${Math.max(0, W - 2 * sl)}" height="${halfFundo * 2}" ${paintSolda(0.4)}/>`
-      );
-      planta.push(
-        `<line x1="${ox + sl}" y1="${foldY}" x2="${ox + W - sl}" y2="${foldY}" ${paintStroke(C.soldaStroke, 0.4)}/>`
-      );
-      return;
-    }
-    const yTop = foldY - halfFundo;
-    const yBot = foldY + halfFundo;
-    // Hexágono: pontas em B (45° com altura halfFundo)
-    const hex = [
-      `M${xBL},${foldY}`,
-      `L${xBL + halfFundo},${yTop}`,
-      `L${xBR - halfFundo},${yTop}`,
-      `L${xBR},${foldY}`,
-      `L${xBR - halfFundo},${yBot}`,
-      `L${xBL + halfFundo},${yBot}`,
-      "Z",
-    ].join(" ");
-    planta.push(`<path d="${hex}" ${paintSolda(0.4)}/>`);
-    planta.push(`<path d="${hex}" ${paintStroke(C.soldaStroke, 0.45)} fill="none"/>`);
+    const y0 = foldY - halfFundo;
+    planta.push(`<rect x="${ox}" y="${y0}" width="${W}" height="${halfFundo * 2}" ${paintSolda(0.4)}/>`);
     planta.push(
-      `<line x1="${xBL}" y1="${foldY}" x2="${xBR}" y2="${foldY}" ${paintStroke(C.soldaStroke, 0.4)}/>`
+      `<line x1="${ox}" y1="${foldY}" x2="${ox + W}" y2="${foldY}" ${paintStroke(C.soldaStroke, 0.4)}/>`
     );
   };
 
