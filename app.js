@@ -254,9 +254,12 @@ function ink(c, m, y, k, hex) {
 
 const C = {
   ink: ink(0, 0, 0, 0.88, "#1a1a1a"),
-  /** Uma única cor de solda (preenchimento @ 50%) */
+  /** Solda das faces */
   solda: ink(0.55, 0.05, 0.35, 0, "#2db89a"),
   soldaStroke: ink(0.75, 0.15, 0.45, 0.1, "#0d6b52"),
+  /** Solda na sanfona / fundo (cor distinta) */
+  soldaSanfona: ink(0.15, 0.45, 0.85, 0.05, "#e8a04a"),
+  soldaSanfonaStroke: ink(0.25, 0.55, 0.9, 0.15, "#b56e1a"),
   fold: ink(0.55, 0.25, 0, 0.15, "#3d6fa8"),
   zipper: ink(0.82, 0.32, 0, 0, "#2f6f9a"),
   zipperFill: ink(0.55, 0.12, 0, 0, "#7eb8d4"),
@@ -309,6 +312,12 @@ function paintStroke(color, width, dash = null) {
 function paintSolda(strokeWidth = 0.35) {
   const o = C.soldaOpacity;
   return `fill="${C.solda.hex}" fill-opacity="${o}" stroke="${C.soldaStroke.hex}" stroke-width="${strokeWidth}" stroke-linejoin="miter"`;
+}
+
+/** Solda na região da sanfona / fundo (âmbar — distinta da solda das faces) */
+function paintSoldaSanfona(strokeWidth = 0.35) {
+  const o = C.soldaOpacity;
+  return `fill="${C.soldaSanfona.hex}" fill-opacity="${o}" stroke="${C.soldaSanfonaStroke.hex}" stroke-width="${strokeWidth}" stroke-linejoin="miter"`;
 }
 
 /** Solda com fill-rule evenodd (mesma geometria do .exe / pack) */
@@ -525,8 +534,8 @@ function drawDoyenSeals(planta, frente, sanfona, verso, d) {
   const gw = sanfona.w;
   const gh = sanfona.h;
   const midY = gy + gh / 2;
-  planta.push(`<rect x="${gx}" y="${gy}" width="${sl}" height="${gh}" ${paintSolda(0.35)}/>`);
-  planta.push(`<rect x="${gx + gw - sl}" y="${gy}" width="${sl}" height="${gh}" ${paintSolda(0.35)}/>`);
+  planta.push(`<rect x="${gx}" y="${gy}" width="${sl}" height="${gh}" ${paintSoldaSanfona(0.35)}/>`);
+  planta.push(`<rect x="${gx + gw - sl}" y="${gy}" width="${sl}" height="${gh}" ${paintSoldaSanfona(0.35)}/>`);
   planta.push(`<line x1="${gx}" y1="${midY}" x2="${gx + gw}" y2="${midY}" ${paintStroke(C.fold, 0.32, "2 1.5")}/>`);
 
   const eyeRx = Math.max(6, (gw - 2 * sl) / 2);
@@ -574,9 +583,9 @@ function drawKSkirtSeals(planta, frente, sanfona, verso, d) {
   /** Solda do fundo: faixa SL centrada na dobra (SL/2 face + SL/2 sanfona), de lateral a lateral */
   const drawSoldaFundo = (foldY) => {
     const y0 = foldY - halfFundo;
-    planta.push(`<rect x="${ox}" y="${y0}" width="${W}" height="${halfFundo * 2}" ${paintSolda(0.4)}/>`);
+    planta.push(`<rect x="${ox}" y="${y0}" width="${W}" height="${halfFundo * 2}" ${paintSoldaSanfona(0.4)}/>`);
     planta.push(
-      `<line x1="${ox}" y1="${foldY}" x2="${ox + W}" y2="${foldY}" ${paintStroke(C.soldaStroke, 0.4)}/>`
+      `<line x1="${ox}" y1="${foldY}" x2="${ox + W}" y2="${foldY}" ${paintStroke(C.soldaSanfonaStroke, 0.4)}/>`
     );
   };
 
@@ -614,27 +623,27 @@ function drawKSkirtSeals(planta, frente, sanfona, verso, d) {
     planta.push(sealLabel(midX, yTop + Math.max(10, run * 0.35), "SOLDA K", { size: 2.4 }));
   }
 
-  // —— SANFONA —— laterais + triângulos K até C
-  planta.push(`<rect x="${gx}" y="${gy}" width="${sl}" height="${gh}" ${paintSolda(0.35)}/>`);
-  planta.push(`<rect x="${gx + gw - sl}" y="${gy}" width="${sl}" height="${gh}" ${paintSolda(0.35)}/>`);
+  // —— SANFONA —— laterais + triângulos K até C (cor distinta)
+  planta.push(`<rect x="${gx}" y="${gy}" width="${sl}" height="${gh}" ${paintSoldaSanfona(0.35)}/>`);
+  planta.push(`<rect x="${gx + gw - sl}" y="${gy}" width="${sl}" height="${gh}" ${paintSoldaSanfona(0.35)}/>`);
 
   if (run > 0) {
-    planta.push(`<path d="M${xBR},${gy} L${gx + gw},${gy} L${gx + gw},${midY} Z" ${paintSolda(0.35)}/>`);
-    planta.push(`<path d="M${xBL},${gy} L${gx},${gy} L${gx},${midY} Z" ${paintSolda(0.35)}/>`);
-    planta.push(`<path d="M${xBR},${gy + gh} L${gx + gw},${gy + gh} L${gx + gw},${midY} Z" ${paintSolda(0.35)}/>`);
-    planta.push(`<path d="M${xBL},${gy + gh} L${gx},${gy + gh} L${gx},${midY} Z" ${paintSolda(0.35)}/>`);
+    planta.push(`<path d="M${xBR},${gy} L${gx + gw},${gy} L${gx + gw},${midY} Z" ${paintSoldaSanfona(0.35)}/>`);
+    planta.push(`<path d="M${xBL},${gy} L${gx},${gy} L${gx},${midY} Z" ${paintSoldaSanfona(0.35)}/>`);
+    planta.push(`<path d="M${xBR},${gy + gh} L${gx + gw},${gy + gh} L${gx + gw},${midY} Z" ${paintSoldaSanfona(0.35)}/>`);
+    planta.push(`<path d="M${xBL},${gy + gh} L${gx},${gy + gh} L${gx},${midY} Z" ${paintSoldaSanfona(0.35)}/>`);
 
-    planta.push(`<line x1="${xBR}" y1="${gy}" x2="${gx + gw}" y2="${midY}" ${paintStroke(C.soldaStroke, 0.55)}/>`);
-    planta.push(`<line x1="${xBL}" y1="${gy}" x2="${gx}" y2="${midY}" ${paintStroke(C.soldaStroke, 0.55)}/>`);
-    planta.push(`<line x1="${xBR}" y1="${gy + gh}" x2="${gx + gw}" y2="${midY}" ${paintStroke(C.soldaStroke, 0.55)}/>`);
-    planta.push(`<line x1="${xBL}" y1="${gy + gh}" x2="${gx}" y2="${midY}" ${paintStroke(C.soldaStroke, 0.55)}/>`);
+    planta.push(`<line x1="${xBR}" y1="${gy}" x2="${gx + gw}" y2="${midY}" ${paintStroke(C.soldaSanfonaStroke, 0.55)}/>`);
+    planta.push(`<line x1="${xBL}" y1="${gy}" x2="${gx}" y2="${midY}" ${paintStroke(C.soldaSanfonaStroke, 0.55)}/>`);
+    planta.push(`<line x1="${xBR}" y1="${gy + gh}" x2="${gx + gw}" y2="${midY}" ${paintStroke(C.soldaSanfonaStroke, 0.55)}/>`);
+    planta.push(`<line x1="${xBL}" y1="${gy + gh}" x2="${gx}" y2="${midY}" ${paintStroke(C.soldaSanfonaStroke, 0.55)}/>`);
   }
 
   // Solda do fundo meio a meio (frente|sanfona e verso|sanfona)
   drawSoldaFundo(gy);
   drawSoldaFundo(gy + gh);
-  planta.push(sealLabel(midX, gy, "SOLDA FUNDO", { size: 2.0 }));
-  planta.push(sealLabel(midX, gy + gh, "SOLDA FUNDO", { size: 2.0 }));
+  planta.push(sealLabel(midX, gy, "SOLDA FUNDO", { size: 2.0, fill: C.soldaSanfonaStroke }));
+  planta.push(sealLabel(midX, gy + gh, "SOLDA FUNDO", { size: 2.0, fill: C.soldaSanfonaStroke }));
 
   planta.push(`<line x1="${gx}" y1="${midY}" x2="${gx + gw}" y2="${midY}" ${paintStroke(C.fold, 0.32, "2 1.5")}/>`);
 
