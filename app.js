@@ -543,64 +543,79 @@ function drawDoyenSeals(planta, frente, sanfona, verso, d) {
 
 
 /**
- * Solda K (K-skirt) — igual ao .exe:
- * face evenodd com “V” abrindo para a boca; sanfona laterais + pontilhado em K.
- * Distância menor (ápice do V → dobra da sanfona) = solda lateral.
+ * Solda K (K-skirt):
+ * Perna na lateral = metade da sanfona; no encontro com a lateral, ângulo 45°;
+ * hipotenusa chega ao fundo da face (início da sanfona).
+ * Com 45°, o avanço horizontal da hipotenusa = metade da sanfona.
  */
 function drawKSkirtSeals(planta, frente, sanfona, verso, d) {
   const sl = d.solda;
   const ox = frente.x;
   const W = frente.w;
-  const skirt = Math.min(frente.h * 0.42, Math.max(sl * 2.5, W * 0.2));
   const leftIn = ox + sl;
   const rightIn = ox + W - sl;
   const midX = ox + W / 2;
+  const util = Math.max(0, rightIn - leftIn);
+  // Perna vertical = S/2; em 45° o run horizontal também é S/2 (limitado à face)
+  const halfS = Math.max(0, d.sanfona / 2);
+  const run = Math.min(halfS, util / 2, Math.max(0, frente.h - 1));
+  const leftLand = leftIn + run;
+  const rightLand = rightIn - run;
 
-  // —— FRENTE ——
+  // —— FRENTE —— (fundo da face = início da sanfona)
   {
-    const yV = frente.y + frente.h - skirt;
-    const yApex = frente.y + frente.h - sl;
-    const inner = `M${leftIn},${frente.y} L${rightIn},${frente.y} L${rightIn},${yV} L${midX},${yApex} L${leftIn},${yV} Z`;
+    const yBottom = frente.y + frente.h;
+    const yK = yBottom - run;
+    const inner =
+      run > 0
+        ? `M${leftIn},${frente.y} L${rightIn},${frente.y} L${rightIn},${yK} L${rightLand},${yBottom} L${leftLand},${yBottom} L${leftIn},${yK} Z`
+        : `M${leftIn},${frente.y} L${rightIn},${frente.y} L${rightIn},${yBottom} L${leftIn},${yBottom} Z`;
     planta.push(`
-      <path d="M${ox},${frente.y} H${ox + W} V${frente.y + frente.h} H${ox} Z ${inner}"
+      <path d="M${ox},${frente.y} H${ox + W} V${yBottom} H${ox} Z ${inner}"
         ${paintSoldaEvenodd(0.4)}/>
-      <line x1="${rightIn}" y1="${yV}" x2="${midX}" y2="${yApex}" ${paintStroke(C.soldaStroke, 0.5)}/>
-      <line x1="${leftIn}" y1="${yV}" x2="${midX}" y2="${yApex}" ${paintStroke(C.soldaStroke, 0.5)}/>
+      <line x1="${rightIn}" y1="${yK}" x2="${rightLand}" y2="${yBottom}" ${paintStroke(C.soldaStroke, 0.5)}/>
+      <line x1="${leftIn}" y1="${yK}" x2="${leftLand}" y2="${yBottom}" ${paintStroke(C.soldaStroke, 0.5)}/>
     `);
-    planta.push(sealLabel(midX, frente.y + frente.h - Math.max(12, skirt * 0.35), "SOLDA K", { size: 2.4 }));
+    planta.push(sealLabel(midX, yBottom - Math.max(8, run * 0.45), "SOLDA K", { size: 2.4 }));
   }
 
-  // —— VERSO ——
+  // —— VERSO —— (topo do verso = início da sanfona; espelho)
   {
-    const yV = verso.y + skirt;
-    const yApex = verso.y + sl;
-    const inner = `M${leftIn},${verso.y + verso.h} L${rightIn},${verso.y + verso.h} L${rightIn},${yV} L${midX},${yApex} L${leftIn},${yV} Z`;
+    const yTop = verso.y;
+    const yK = yTop + run;
+    const inner =
+      run > 0
+        ? `M${leftIn},${verso.y + verso.h} L${rightIn},${verso.y + verso.h} L${rightIn},${yK} L${rightLand},${yTop} L${leftLand},${yTop} L${leftIn},${yK} Z`
+        : `M${leftIn},${verso.y + verso.h} L${rightIn},${verso.y + verso.h} L${rightIn},${yTop} L${leftIn},${yTop} Z`;
     planta.push(`
       <path d="M${ox},${verso.y} H${ox + W} V${verso.y + verso.h} H${ox} Z ${inner}"
         ${paintSoldaEvenodd(0.4)}/>
-      <line x1="${rightIn}" y1="${yV}" x2="${midX}" y2="${yApex}" ${paintStroke(C.soldaStroke, 0.5)}/>
-      <line x1="${leftIn}" y1="${yV}" x2="${midX}" y2="${yApex}" ${paintStroke(C.soldaStroke, 0.5)}/>
+      <line x1="${rightIn}" y1="${yK}" x2="${rightLand}" y2="${yTop}" ${paintStroke(C.soldaStroke, 0.5)}/>
+      <line x1="${leftIn}" y1="${yK}" x2="${leftLand}" y2="${yTop}" ${paintStroke(C.soldaStroke, 0.5)}/>
     `);
-    planta.push(sealLabel(midX, verso.y + Math.max(12, skirt * 0.35), "SOLDA K", { size: 2.4 }));
+    planta.push(sealLabel(midX, yTop + Math.max(8, run * 0.45), "SOLDA K", { size: 2.4 }));
   }
 
-  // —— SANFONA ——
+  // —— SANFONA —— laterais + dobra central + pontilhado em K (45° / metade S)
   const gx = sanfona.x;
   const gy = sanfona.y;
   const gw = sanfona.w;
   const gh = sanfona.h;
   const midY = gy + gh / 2;
+  const gussetRun = Math.min(run, gh / 2);
   planta.push(`<rect x="${gx}" y="${gy}" width="${sl}" height="${gh}" ${paintSolda(0.35)}/>`);
   planta.push(`<rect x="${gx + gw - sl}" y="${gy}" width="${sl}" height="${gh}" ${paintSolda(0.35)}/>`);
   planta.push(`<line x1="${gx}" y1="${midY}" x2="${gx + gw}" y2="${midY}" ${paintStroke(C.fold, 0.32, "2 1.5")}/>`);
 
-  const tip = Math.min(gh * 0.28, gw * 0.2);
   const tips = [
-    [gx + sl, gy, midX, gy + tip],
-    [gx + gw - sl, gy, midX, gy + tip],
-    [gx + sl, gy + gh, midX, gy + gh - tip],
-    [gx + gw - sl, gy + gh, midX, gy + gh - tip],
-    [midX, gy + tip, midX, gy + gh - tip],
+    // topo (junção com frente): continua a hipotenusa a 45° para dentro da sanfona
+    [leftIn, gy, leftIn + gussetRun, gy + gussetRun],
+    [rightIn, gy, rightIn - gussetRun, gy + gussetRun],
+    // base (junção com verso)
+    [leftIn, gy + gh, leftIn + gussetRun, gy + gh - gussetRun],
+    [rightIn, gy + gh, rightIn - gussetRun, gy + gh - gussetRun],
+    // haste central do K
+    [midX, gy + gussetRun, midX, gy + gh - gussetRun],
   ];
   for (const [x1, y1, x2, y2] of tips) {
     planta.push(`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" ${paintStroke(C.fold, 0.28, "1.5 1.2")}/>`);
