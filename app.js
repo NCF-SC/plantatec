@@ -550,8 +550,8 @@ function drawDoyenSeals(planta, frente, sanfona, verso, d) {
  *   B = início da sanfona, S/2 para dentro (45°)
  *   C = borda externa, no meio da sanfona (dobra)
  *
- * Sem faixa horizontal atravessando o fundo — só os triângulos do K + laterais SL.
- * Solda debaixo (faixa A→junção na borda) alinha com a perna S/2; laterais = SL.
+ * Solda do fundo: altura = SL, meio a meio na dobra (SL/2 na face + SL/2 na sanfona),
+ * pontas em V encaixando nos vértices B do K. Idem no verso.
  */
 function drawKSkirtSeals(planta, frente, sanfona, verso, d) {
   const sl = d.solda;
@@ -560,32 +560,60 @@ function drawKSkirtSeals(planta, frente, sanfona, verso, d) {
   const midX = ox + W / 2;
   const halfS = Math.max(0, d.sanfona / 2);
   const run = Math.min(halfS, W / 2 - 0.5, Math.max(0, frente.h - 1));
+  // Solda fundo: SL total, metade pra cima / metade pra baixo da dobra
+  const halfFundo = Math.max(0.5, sl / 2);
 
   const gx = sanfona.x;
   const gy = sanfona.y;
   const gw = sanfona.w;
   const gh = sanfona.h;
   const midY = gy + gh / 2;
+  const xBL = ox + run;
+  const xBR = ox + W - run;
 
-  // —— FRENTE —— laterais + triângulos K (sem barra no centro)
+  /** Faixa de solda do fundo centrada na dobra, pontas no vértice B do K */
+  const drawSoldaFundo = (foldY) => {
+    if (run <= 0 || xBR - xBL < halfFundo * 2) {
+      // Largura apertada: retângulo simples meio a meio
+      const y0 = foldY - halfFundo;
+      planta.push(
+        `<rect x="${ox + sl}" y="${y0}" width="${Math.max(0, W - 2 * sl)}" height="${halfFundo * 2}" ${paintSolda(0.4)}/>`
+      );
+      planta.push(
+        `<line x1="${ox + sl}" y1="${foldY}" x2="${ox + W - sl}" y2="${foldY}" ${paintStroke(C.soldaStroke, 0.4)}/>`
+      );
+      return;
+    }
+    const yTop = foldY - halfFundo;
+    const yBot = foldY + halfFundo;
+    // Hexágono: pontas em B (45° com altura halfFundo)
+    const hex = [
+      `M${xBL},${foldY}`,
+      `L${xBL + halfFundo},${yTop}`,
+      `L${xBR - halfFundo},${yTop}`,
+      `L${xBR},${foldY}`,
+      `L${xBR - halfFundo},${yBot}`,
+      `L${xBL + halfFundo},${yBot}`,
+      "Z",
+    ].join(" ");
+    planta.push(`<path d="${hex}" ${paintSolda(0.4)}/>`);
+    planta.push(`<path d="${hex}" ${paintStroke(C.soldaStroke, 0.45)} fill="none"/>`);
+    planta.push(
+      `<line x1="${xBL}" y1="${foldY}" x2="${xBR}" y2="${foldY}" ${paintStroke(C.soldaStroke, 0.4)}/>`
+    );
+  };
+
+  // —— FRENTE —— laterais + triângulos K
   {
     const yBottom = frente.y + frente.h;
     const yA = yBottom - run;
-    const xBL = ox + run;
-    const xBR = ox + W - run;
 
     planta.push(`<rect x="${ox}" y="${frente.y}" width="${sl}" height="${frente.h}" ${paintSolda(0.4)}/>`);
     planta.push(`<rect x="${ox + W - sl}" y="${frente.y}" width="${sl}" height="${frente.h}" ${paintSolda(0.4)}/>`);
 
     if (run > 0) {
-      // Triângulos A–canto–B (45°, perna S/2)
-      planta.push(
-        `<path d="M${ox},${yA} L${ox},${yBottom} L${xBL},${yBottom} Z" ${paintSolda(0.4)}/>`
-      );
-      planta.push(
-        `<path d="M${ox + W},${yA} L${ox + W},${yBottom} L${xBR},${yBottom} Z" ${paintSolda(0.4)}/>`
-      );
-      // Contorno magenta: A → B → (continua na sanfona até C)
+      planta.push(`<path d="M${ox},${yA} L${ox},${yBottom} L${xBL},${yBottom} Z" ${paintSolda(0.4)}/>`);
+      planta.push(`<path d="M${ox + W},${yA} L${ox + W},${yBottom} L${xBR},${yBottom} Z" ${paintSolda(0.4)}/>`);
       planta.push(`<line x1="${ox}" y1="${yA}" x2="${xBL}" y2="${yBottom}" ${paintStroke(C.soldaStroke, 0.55)}/>`);
       planta.push(`<line x1="${ox + W}" y1="${yA}" x2="${xBR}" y2="${yBottom}" ${paintStroke(C.soldaStroke, 0.55)}/>`);
     }
@@ -596,8 +624,6 @@ function drawKSkirtSeals(planta, frente, sanfona, verso, d) {
   {
     const yTop = verso.y;
     const yA = yTop + run;
-    const xBL = ox + run;
-    const xBR = ox + W - run;
 
     planta.push(`<rect x="${ox}" y="${verso.y}" width="${sl}" height="${verso.h}" ${paintSolda(0.4)}/>`);
     planta.push(`<rect x="${ox + W - sl}" y="${verso.y}" width="${sl}" height="${verso.h}" ${paintSolda(0.4)}/>`);
@@ -611,27 +637,27 @@ function drawKSkirtSeals(planta, frente, sanfona, verso, d) {
     planta.push(sealLabel(midX, yTop + Math.max(10, run * 0.35), "SOLDA K", { size: 2.4 }));
   }
 
-  // —— SANFONA —— laterais + triângulos K até o meio da borda (ponto C)
-  const xBL = gx + run;
-  const xBR = gx + gw - run;
-
+  // —— SANFONA —— laterais + triângulos K até C
   planta.push(`<rect x="${gx}" y="${gy}" width="${sl}" height="${gh}" ${paintSolda(0.35)}/>`);
   planta.push(`<rect x="${gx + gw - sl}" y="${gy}" width="${sl}" height="${gh}" ${paintSolda(0.35)}/>`);
 
   if (run > 0) {
-    // Metade superior: B → canto → C
     planta.push(`<path d="M${xBR},${gy} L${gx + gw},${gy} L${gx + gw},${midY} Z" ${paintSolda(0.35)}/>`);
     planta.push(`<path d="M${xBL},${gy} L${gx},${gy} L${gx},${midY} Z" ${paintSolda(0.35)}/>`);
-    // Metade inferior
     planta.push(`<path d="M${xBR},${gy + gh} L${gx + gw},${gy + gh} L${gx + gw},${midY} Z" ${paintSolda(0.35)}/>`);
     planta.push(`<path d="M${xBL},${gy + gh} L${gx},${gy + gh} L${gx},${midY} Z" ${paintSolda(0.35)}/>`);
 
-    // Magenta contínuo: B → C (fecha o K com a face)
     planta.push(`<line x1="${xBR}" y1="${gy}" x2="${gx + gw}" y2="${midY}" ${paintStroke(C.soldaStroke, 0.55)}/>`);
     planta.push(`<line x1="${xBL}" y1="${gy}" x2="${gx}" y2="${midY}" ${paintStroke(C.soldaStroke, 0.55)}/>`);
     planta.push(`<line x1="${xBR}" y1="${gy + gh}" x2="${gx + gw}" y2="${midY}" ${paintStroke(C.soldaStroke, 0.55)}/>`);
     planta.push(`<line x1="${xBL}" y1="${gy + gh}" x2="${gx}" y2="${midY}" ${paintStroke(C.soldaStroke, 0.55)}/>`);
   }
+
+  // Solda do fundo meio a meio (frente|sanfona e verso|sanfona)
+  drawSoldaFundo(gy);
+  drawSoldaFundo(gy + gh);
+  planta.push(sealLabel(midX, gy, "SOLDA FUNDO", { size: 2.0 }));
+  planta.push(sealLabel(midX, gy + gh, "SOLDA FUNDO", { size: 2.0 }));
 
   planta.push(`<line x1="${gx}" y1="${midY}" x2="${gx + gw}" y2="${midY}" ${paintStroke(C.fold, 0.32, "2 1.5")}/>`);
 
