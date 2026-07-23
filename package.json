@@ -1,0 +1,11 @@
+{
+  "name": "plantatec",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build:web": "node scripts/build-web.mjs"
+  },
+  "devDependencies": {
+    "javascript-obfuscator": "^5.4.7"
+  }
+}

@@ -1,0 +1,7 @@
+services:
+  - type: web
+    name: plantatec
+    runtime: static
+    buildCommand: npm install && npm run build:web
+    staticPublishPath: ./webdist
+    autoDeployTrigger: commit

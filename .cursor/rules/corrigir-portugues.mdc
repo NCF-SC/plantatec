@@ -1,0 +1,14 @@
+---
+description: Corrigir erros de português e termos técnicos do usuário
+alwaysApply: true
+---
+
+# Correção de português e termos técnicos
+
+Quando o usuário se equivocar em português (ortografia, gramática) ou em termos técnicos de embalagem/conversão/print (ex.: “trespasse” → **transpasse**), o agente deve:
+
+1. **Corrigir de forma natural** na resposta (breve e clara), sem constranger.
+2. **Usar a forma correta** no código, UI, labels, cotas e documentação gerada.
+3. Se o erro já estiver no projeto, **corrigir o código/arquivos** na mesma tarefa quando estiver editando aquela área.
+
+Não ignore o equívoco só para “acompanhar” a palavra errada do usuário.

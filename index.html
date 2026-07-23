@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Planta Técnica — Embalagem Flexível</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div id="licenseGate" class="license-gate hidden" aria-hidden="true">
+    <div class="license-card">
+      <p class="brand-mark">PLANTATEC</p>
+      <h2>Limite de usos atingido</h2>
+      <p class="license-copy">O período de avaliação acabou. Digite a senha de liberação para continuar.</p>
+      <label>
+        Senha
+        <input type="password" id="licensePassword" autocomplete="off" />
+      </label>
+      <p id="licenseError" class="license-error" hidden></p>
+      <button type="button" id="btnUnlock" class="btn primary">Liberar app</button>
+    </div>
+  </div>
+
+  <div class="app">
+    <main class="canvas-wrap">
+      <header class="topbar">
+        <div class="brand-inline">
+          <p class="brand-mark">PLANTATEC</p>
+          <p class="brand-pitch">A engenharia da sua embalagem, automatizada.</p>
+        </div>
+        <div class="topbar-meta">
+          <span id="resumo">—</span>
+          <span class="license-chip" id="licenseChip" hidden></span>
+          <button type="button" id="btnToggleDock" class="dock-toggle" title="Minimizar / expandir o painel de dados" aria-expanded="true" aria-controls="dock">
+            Minimizar ▾
+          </button>
+          <div class="zoom-ctl" title="100% = planta inteira na tela">
+            <button type="button" id="btnZoomOut" class="zoom-btn" aria-label="Diminuir zoom">−</button>
+            <button type="button" id="btnZoomReset" class="zoom-pct" aria-label="Ajustar à tela">100%</button>
+            <button type="button" id="btnZoomIn" class="zoom-btn" aria-label="Aumentar zoom">+</button>
+          </div>
+        </div>
+      </header>
+      <div class="canvas" id="canvas">
+        <div class="canvas-tools" role="toolbar" aria-label="Ferramentas de visualização">
+          <button type="button" id="toolHand" class="tool-btn active" title="Mover (mão) — Espaço = temporário" aria-label="Ferramenta mão" aria-pressed="true">
+            <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M11 8.5V5.2a1.2 1.2 0 0 1 2.4 0V9h.3V4.1a1.2 1.2 0 0 1 2.4 0V9h.3V5.3a1.2 1.2 0 1 1 2.4 0v7.2c0 3.3-2 6-5.4 6.9A5.8 5.8 0 0 1 7 15.3v-4.6a1.3 1.3 0 0 1 2.6 0V13h.4V8.5a1.2 1.2 0 0 1 2.4 0z"/></svg>
+          </button>
+          <button type="button" id="toolZoom" class="tool-btn" title="Zoom (lupa) — clique amplia, Alt+clique reduz" aria-label="Ferramenta lupa" aria-pressed="false">
+            <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M10.5 3a7.5 7.5 0 0 1 5.9 12.1l3.7 3.7-1.4 1.4-3.7-3.7A7.5 7.5 0 1 1 10.5 3zm0 2a5.5 5.5 0 1 0 0 11 5.5 5.5 0 0 0 0-11zm-.8 2.5h1.6v2.2H14v1.6h-2.7V14H9.7v-2.7H7V9.7h2.7V7.5z"/></svg>
+          </button>
+          <button type="button" id="toolMeasure" class="tool-btn" title="Régua (M) — ímã em bordas/dobras/soldas · Shift trava eixo" aria-label="Ferramenta régua" aria-pressed="false">
+            <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M3 7h18v10H3V7zm2 2v6h1.2V9H5zm2.5 0v6H8.7V9H7.5zm2.5 0v6h1.2V9H10zm2.5 0v6h1.2V9H12.5zm2.5 0v6H16.7V9H15zm2.5 0v6H19.2V9H17.5z"/></svg>
+          </button>
+          <button type="button" id="btnFitView" class="tool-btn" title="Encaixar planta na tela" aria-label="Encaixar na tela">
+            <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M4 4h6v2H6v4H4V4zm10 0h6v6h-2V6h-4V4zM4 14h2v4h4v2H4v-6zm16 0v6h-6v-2h4v-4h2z"/></svg>
+          </button>
+        </div>
+        <div class="measure-readout" id="measureReadout" hidden>0 mm</div>
+        <div class="preview-stage" id="previewStage">
+          <svg id="preview" xmlns="http://www.w3.org/2000/svg"></svg>
+          <svg id="measureOverlay" class="measure-overlay" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"></svg>
+        </div>
+      </div>
+    </main>
+
+    <button type="button" class="dock-expand-tab" id="btnExpandDock" hidden title="Mostrar painel de dados">Mostrar dados ▴</button>
+    <aside class="dock" id="dock">
+      <div class="dock-resize-handle" id="dockResizeHandle" title="Arraste para ajustar · clique duplo para tamanho normal" role="separator" aria-orientation="horizontal" aria-label="Ajustar altura do painel de dados"></div>
+      <div class="dock-bar">
+        <button type="button" id="btnMinimizeDock" class="dock-toggle dock-toggle-bar" title="Minimizar painel de dados" aria-controls="dock">
+          Minimizar ▾
+        </button>
+      </div>
+      <form id="form" class="form-dock">
+        <section class="box">
+          <h2>Medidas</h2>
+          <div class="fields">
+            <label><span id="lblAltura">Altura total</span><input type="number" name="alturaTotal" value="0" min="0" step="1" /></label>
+            <label><span id="lblLargura">Largura</span><input type="number" name="largura" value="0" min="0" step="1" /></label>
+            <label id="wrapSanfona"><span id="lblSanfona">Sanfona</span><input type="number" name="sanfona" value="0" min="0" step="1" /></label>
+            <label id="wrapFundo" class="hidden" title="Profundidade da base plana (região adicional na planta)">Fundo (base)<input type="number" name="fundo" value="60" min="0" step="1" /></label>
+            <label><span id="lblSolda">Solda lateral</span><input type="number" name="soldaLateral" value="8" min="1" max="30" step="0.5" /></label>
+            <label id="wrapTranspasse" class="hidden" title="Área de sobreposição / encontro das extremidades do filme">Transpasse<input type="number" name="transpasse" value="0" min="0" max="40" step="0.5" /></label>
+            <label id="wrapSoldaDorsal" class="hidden" title="Solda longitudinal efetiva — deve caber dentro do transpasse">Solda dorsal<input type="number" name="soldaDorsal" value="10" min="0" max="30" step="0.5" /></label>
+            <label id="wrapLadoTranspasse" class="hidden span-2" title="Definido pelo sentido da máquina / arte — nunca no meio do filme">
+              Lado do transpasse
+              <select name="ladoTranspasse">
+                <option value="esquerda" selected>Esquerda (início do filme)</option>
+                <option value="direita">Direita (fim do filme)</option>
+              </select>
+            </label>
+            <label id="wrapTipoSoldaLong" class="hidden span-2" title="Lap = sobreposição plana · Fin = barbatana na traseira">
+              Solda longitudinal
+              <select name="tipoSoldaLong">
+                <option value="lap" selected>Lap Seal (sobreposição)</option>
+                <option value="fin">Fin Seal (barbatana)</option>
+              </select>
+            </label>
+            <label id="wrapDistU" class="hidden" title="Distância da base do U até o início da sanfona">Dist. U → sanfona<input type="number" name="distUSanfona" value="3" min="0" max="40" step="0.5" /></label>
+          </div>
+          <p class="calc-line" id="calcFaces">—</p>
+        </section>
+
+        <section class="box">
+          <h2>Tipo</h2>
+          <div class="fields">
+            <label class="span-2">
+              Embalagem
+              <select name="tipoEmbalagem">
+                <option value="2side" selected>2 soldas · tubo / almofada</option>
+                <option value="almofada">Almofada · Pillow (snacks, pães)</option>
+                <option value="finseal">Fin Seal · barbatana (café, pó)</option>
+                <option value="lapseal">Lap Seal · sobreposta (líquidos leves)</option>
+                <option value="flowpack">Flow Pack · barras, biscoitos</option>
+                <option value="stickpack">Stick Pack · café, açúcar, dose</option>
+                <option value="3side">3 soldas · envelope aberto</option>
+                <option value="sachet3">Sachê 3 soldas · dose / molho</option>
+                <option value="sachet4">Sachê 4 soldas · amostra fechada</option>
+                <option value="vacuum3">Vácuo 3 soldas · carnes, queijos</option>
+                <option value="vacuum4">Vácuo 4 soldas · fechado pós-vácuo</option>
+                <option value="4side">4 soldas · Quad-Seal (café, grãos)</option>
+                <option value="flatbottom">Flat Bottom · caixa (pet, café)</option>
+                <option value="sidegusset">Side Gusset · sanfona lat. (café)</option>
+                <option value="spouted">Spouted · pouch c/ bico (molho, shampoo)</option>
+                <option value="bottomgusset">Bottom Gusset · sanfona fundo</option>
+                <option value="doyen">Doyen · stand-up solda U</option>
+                <option value="k-skirt">K-skirt · stand-up solda K</option>
+              </select>
+            </label>
+          </div>
+          <div class="radio-row">
+            <label class="check"><input type="radio" name="cantos" value="reto" checked /> Reto</label>
+            <label class="check"><input type="radio" name="cantos" value="arredondado" /> Arred. Ø15</label>
+          </div>
+        </section>
+
+        <section class="box">
+          <h2>Suspensão</h2>
+          <div class="radio-col">
+            <label class="check"><input type="radio" name="suspensao" value="nenhuma" checked /> Nenhuma</label>
+            <label class="check"><input type="radio" name="suspensao" value="chapeu" /> Chapéu</label>
+            <label class="check"><input type="radio" name="suspensao" value="furo" /> Furo</label>
+          </div>
+          <div class="fields hidden" id="suspensaoOpts">
+            <label id="wrapDistSusp">
+              <span id="lblDistSusp">Dist. boca</span>
+              <input type="number" name="distSuspensao" value="0" min="0" step="0.5" />
+            </label>
+            <label id="wrapDiametro" class="hidden">
+              Diâmetro
+              <input type="number" name="diametroFuro" value="0" min="0" step="0.5" />
+            </label>
+          </div>
+        </section>
+
+        <section class="box hidden" id="boxValvula">
+          <h2>Válvula</h2>
+          <label class="check"><input type="checkbox" name="temValvula" /> Adicionar válvula</label>
+          <div class="fields hidden" id="valvulaOpts">
+            <label>Dist. topo (Y)<input type="number" name="valvulaY" value="40" min="0" step="0.5" /></label>
+            <label>Dist. esq. (X)<input type="number" name="valvulaX" value="0" min="0" step="0.5" title="0 = centro da largura" /></label>
+            <label>Diâmetro Ø<input type="number" name="valvulaDiametro" value="15" min="1" step="0.5" /></label>
+            <label>Área livre<input type="number" name="valvulaLivre" value="3" min="0" step="0.5" title="Folga radial além do Ø (mm)" /></label>
+          </div>
+          <p class="hint">X = 0 centra na largura. Área livre = folga sem tinta/verniz ao redor do Ø.</p>
+        </section>
+
+        <section class="box hidden" id="boxSpout">
+          <h2>Bico (spout)</h2>
+          <div class="fields">
+            <label class="span-2">
+              Posição
+              <select name="spoutPosicao">
+                <option value="centro" selected>Centro superior</option>
+                <option value="canto-esquerdo">Canto esquerdo</option>
+                <option value="canto-direito">Canto direito</option>
+                <option value="lateral">Lateral</option>
+              </select>
+            </label>
+            <label>Área livre<input type="number" name="spoutLivre" value="5" min="0" step="0.5" title="Folga radial além do bico (mm)" /></label>
+          </div>
+          <p class="hint">Evite textos importantes na área de fixação do bico — há múltiplas camadas na solda.</p>
+        </section>
+
+        <section class="box">
+          <h2>Zipper</h2>
+          <label class="check"><input type="checkbox" name="temZipper" /> Adicionar zipper</label>
+          <div class="fields hidden" id="zipperOpts">
+            <label>Dist. boca<input type="number" name="distZipper" value="0" min="0" step="0.5" /></label>
+            <label>Largura<input type="number" name="larguraZipper" value="10" min="0" step="0.5" /></label>
+          </div>
+        </section>
+
+        <section class="box">
+          <h2>Picote</h2>
+          <label class="check"><input type="checkbox" name="temCorte" /> Adicionar picote</label>
+          <div class="fields hidden" id="corteOpts">
+            <label>Dist. boca<input type="number" name="distCorte" value="0" min="0" step="0.5" /></label>
+          </div>
+        </section>
+
+        <section class="box">
+          <h2>Fotocélula</h2>
+          <label class="check"><input type="checkbox" name="temFotocelula" /> Adicionar fotocélula</label>
+          <div class="hidden" id="fotocelulaOpts">
+            <div class="foto-dims">
+              <label>Largura<input type="number" name="fotoLargura" value="5" min="1" step="0.5" /></label>
+              <button type="button" id="btnFotoInvert" class="foto-invert-btn" title="Inverter largura ↔ altura" aria-label="Inverter largura e altura">
+                <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+                  <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                    d="M4 8h12m0 0-3-3m3 3-3 3M20 16H8m0 0 3-3m-3 3 3 3"/>
+                </svg>
+              </button>
+              <label>Altura<input type="number" name="fotoAltura" value="10" min="1" step="0.5" /></label>
+            </div>
+            <div class="fields">
+              <label title="Afastamento da borda lateral (corte). 0 = rente.">
+                Dist. lateral
+                <input type="number" name="fotoDistLateral" value="0" min="0" step="0.5" />
+              </label>
+              <label title="Afastamento da borda de cima ou de baixo (conforme a quina). 0 = rente.">
+                Dist. cima/baixo
+                <input type="number" name="fotoDistVertical" value="0" min="0" step="0.5" />
+              </label>
+            </div>
+            <p class="foto-quina-label">Quina</p>
+            <div class="foto-quina-grid" role="radiogroup" aria-label="Quina da fotocélula">
+              <label class="foto-quina" title="Esquerda cima">
+                <input type="radio" name="fotoPosicao" value="canto-esquerdo-cima" />
+                <span class="foto-quina-card">
+                  <svg viewBox="0 0 48 36" aria-hidden="true">
+                    <rect class="foto-quina-frame" x="6" y="4" width="36" height="28" fill="none" stroke="currentColor" stroke-width="1.4" opacity="0.45"/>
+                    <rect class="foto-quina-mark" x="6" y="4" width="8" height="12" fill="currentColor"/>
+                  </svg>
+                  <span>Esq. cima</span>
+                </span>
+              </label>
+              <label class="foto-quina" title="Direita cima">
+                <input type="radio" name="fotoPosicao" value="canto-direito-cima" />
+                <span class="foto-quina-card">
+                  <svg viewBox="0 0 48 36" aria-hidden="true">
+                    <rect class="foto-quina-frame" x="6" y="4" width="36" height="28" fill="none" stroke="currentColor" stroke-width="1.4" opacity="0.45"/>
+                    <rect class="foto-quina-mark" x="34" y="4" width="8" height="12" fill="currentColor"/>
+                  </svg>
+                  <span>Dir. cima</span>
+                </span>
+              </label>
+              <label class="foto-quina" title="Esquerda baixo">
+                <input type="radio" name="fotoPosicao" value="canto-esquerdo-baixo" checked />
+                <span class="foto-quina-card">
+                  <svg viewBox="0 0 48 36" aria-hidden="true">
+                    <rect class="foto-quina-frame" x="6" y="4" width="36" height="28" fill="none" stroke="currentColor" stroke-width="1.4" opacity="0.45"/>
+                    <rect class="foto-quina-mark" x="6" y="20" width="8" height="12" fill="currentColor"/>
+                  </svg>
+                  <span>Esq. baixo</span>
+                </span>
+              </label>
+              <label class="foto-quina" title="Direita baixo">
+                <input type="radio" name="fotoPosicao" value="canto-direito-baixo" />
+                <span class="foto-quina-card">
+                  <svg viewBox="0 0 48 36" aria-hidden="true">
+                    <rect class="foto-quina-frame" x="6" y="4" width="36" height="28" fill="none" stroke="currentColor" stroke-width="1.4" opacity="0.45"/>
+                    <rect class="foto-quina-mark" x="34" y="20" width="8" height="12" fill="currentColor"/>
+                  </svg>
+                  <span>Dir. baixo</span>
+                </span>
+              </label>
+            </div>
+          </div>
+        </section>
+
+        <section class="box box-actions">
+          <h2>Ações</h2>
+          <div class="actions">
+            <button type="button" id="btnExport" class="btn primary">Exportar SVG</button>
+            <button type="button" id="btnExportPdf" class="btn primary">Exportar PDF</button>
+            <button type="button" id="btnReset" class="btn ghost">Resetar</button>
+          </div>
+        </section>
+      </form>
+    </aside>
+  </div>
+  <script src="app.js" defer></script>
+</body>
+</html>

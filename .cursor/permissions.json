@@ -1,0 +1,14 @@
+{
+  "autoRun": {
+    "allow_instructions": [
+      "Allow shell commands that check syntax (node --check), copy files into webdist, and run light javascript-obfuscator builds for Plantatec.",
+      "Allow npx netlify-cli deploy to Plantatec (site 4cfdc174-a7d6-42cc-8a57-055e1cd992fd) with --prod --dir=webdist, including network.",
+      "Allow reading/listing/grepping project files and running PowerShell copy/list commands in this repo.",
+      "Allow npm/npx for javascript-obfuscator and netlify-cli used by this project."
+    ],
+    "block_instructions": [
+      "Always ask before deleting files outside webdist/pack, force-pushing git, changing git config, or touching secrets (.env, credentials).",
+      "Always ask before Netlify billing/credits changes or buying domains."
+    ]
+  }
+}

@@ -1,0 +1,11 @@
+node_modules/
+pack/
+build/
+dist_build/
+*.spec
+__pycache__/
+webdist/
+.NETLIFY-CLAIM.txt
+NETLIFY-CLAIM.txt
+.env
+.env.*
