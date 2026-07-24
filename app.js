@@ -19,7 +19,7 @@ function readForm(form) {
     return Number.isFinite(v) ? v : fallback;
   };
   return {
-    tipoEmbalagem: String(fd.get("tipoEmbalagem") || "2side"),
+    tipoEmbalagem: String(fd.get("tipoEmbalagem") || "k-skirt"),
     cantos: String(fd.get("cantos") || "reto"),
     largura: num("largura", 0),
     alturaTotal: num("alturaTotal", 0),
